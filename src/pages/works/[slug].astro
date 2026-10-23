@@ -1,0 +1,74 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import { getWorks } from '../../lib';
+
+export async function getStaticPaths() {
+  const works = await getWorks();
+  return works.map((work, i) => ({
+    params: { slug: work.id },
+    props: { work, next: works[(i + 1) % works.length] },
+  }));
+}
+
+const { work, next } = Astro.props;
+const { title, category, year, cover, images, description } = work.data;
+const sizes = '(min-width: 1440px) 1360px, 100vw';
+---
+
+<Base title={title} description={description || title}>
+  <article class="wrap">
+    <header class="head">
+      <a href="/#works-title" class="back">← Works</a>
+      <h1 class="line" style="--i:0">{title}</h1>
+      <p class="info line" style="--i:1">{category} · {year}</p>
+      {description && <p class="desc line" style="--i:2">{description}</p>}
+    </header>
+
+    <div class="images">
+      <Image src={cover} alt={title} widths={[640, 1080, 1600, 2000]} sizes={sizes} loading="eager" format="webp" quality={82} />
+      {images.map((img, i) => (
+        <Image class="reveal" src={img} alt={`${title} 상세 이미지 ${i + 1}`} widths={[640, 1080, 1600, 2000]} sizes={sizes} format="webp" quality={82} />
+      ))}
+    </div>
+
+    {next && next.id !== work.id && (
+      <a href={`/works/${next.id}/`} class="next">
+        <span>Next</span>
+        <strong>{next.data.title}</strong>
+      </a>
+    )}
+  </article>
+</Base>
+
+<style>
+  .head { padding: 40px 0 48px; max-width: 720px; }
+  .back {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 40px;
+    transition: color 0.2s;
+  }
+  .back:hover { color: var(--fg); }
+  h1 {
+    font-size: clamp(28px, 7vw, 56px);
+    line-height: 1.25;
+    letter-spacing: -0.03em;
+  }
+  .info { margin-top: 10px; font-size: 14px; color: var(--muted); }
+  .desc { margin-top: 28px; font-size: 16px; line-height: 1.75; color: rgba(255, 255, 255, 0.85); white-space: pre-line; }
+
+  .images { display: grid; gap: 12px; }
+  @media (min-width: 768px) { .images { gap: 24px; } }
+  .images :global(img) { width: 100%; background: #111; }
+
+  .next {
+    display: block;
+    margin-top: 96px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+  .next span { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .next strong { font-size: clamp(22px, 5vw, 36px); font-weight: 600; letter-spacing: -0.02em; }
+</style>

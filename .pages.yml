@@ -1,0 +1,66 @@
+# Pages CMS 설정 (https://pagescms.org)
+media:
+  input: src/assets/works
+  output: ../../assets/works
+  extensions: [jpg, jpeg, png, webp, gif, avif]
+
+content:
+  - name: works
+    label: 작업물
+    type: collection
+    path: src/content/works
+    filename: "{year}{month}{day}-{hour}{minute}{second}.md"
+    view:
+      fields: [title, category, year]
+      primary: title
+      sort: [year, title]
+      default:
+        sort: year
+        order: desc
+    fields:
+      - name: title
+        label: 제목
+        type: string
+        required: true
+      - name: category
+        label: 종류
+        type: select
+        required: true
+        options:
+          values: [그래픽, 사진, 패키지]
+      - name: year
+        label: 연도
+        type: number
+        required: true
+      - name: cover
+        label: 대표 이미지
+        description: 목록에 보이는 사진이에요. 세로 4:5 비율이 가장 예쁘게 보여요.
+        type: image
+        required: true
+      - name: images
+        label: 상세 이미지
+        description: 여러 장 올릴 수 있어요. 순서대로 보여요.
+        type: image
+        list: true
+      - name: description
+        label: 짧은 설명
+        type: text
+
+  - name: site
+    label: 사이트 정보
+    type: file
+    path: src/data/site.json
+    format: json
+    fields:
+      - name: intro
+        label: 자기소개 문장
+        description: 줄바꿈(엔터)마다 한 줄씩 나타나요.
+        type: text
+        required: true
+      - name: subtitle
+        label: 소개 아래 작은 글씨
+        type: string
+      - name: email
+        label: 이메일
+        type: string
+        required: true

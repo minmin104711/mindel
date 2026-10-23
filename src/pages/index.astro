@@ -1,0 +1,106 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import site from '../data/site.json';
+import { getWorks } from '../lib';
+
+const works = await getWorks();
+// 소개 문장에서 줄바꿈(엔터)마다 한 줄씩 나타나요
+const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
+---
+
+<Base>
+  <section class="intro wrap">
+    <h1 class="intro-text">
+      {lines.map((line, i) => <span class="line" style={`--i:${i}`}>{line}</span>)}
+    </h1>
+    {site.subtitle && (
+      <p class="intro-sub line" style={`--i:${lines.length + 1}`}>{site.subtitle}</p>
+    )}
+  </section>
+
+  <section class="works wrap" aria-labelledby="works-title">
+    <h2 id="works-title" class="works-title">Works <span>{works.length}</span></h2>
+    <ul class="grid">
+      {works.map((work, i) => (
+        <li class="reveal">
+          <a href={`/works/${work.id}/`} class="card">
+            <div class="thumb">
+              <Image
+                src={work.data.cover}
+                alt={work.data.title}
+                widths={[480, 800, 1200]}
+                sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw"
+                loading={i < 2 ? 'eager' : 'lazy'}
+                format="webp"
+                quality={80}
+              />
+            </div>
+            <div class="meta">
+              <h3>{work.data.title}</h3>
+              <p>{work.data.category} · {work.data.year}</p>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .intro {
+    min-height: calc(88svh - 60px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 64px;
+  }
+  .intro-text {
+    font-size: clamp(30px, 8.4vw, 76px);
+    line-height: 1.28;
+    letter-spacing: -0.03em;
+    max-width: 16em;
+  }
+  .intro-sub {
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .works { padding-top: 32px; border-top: 1px solid var(--line); }
+  .works-title {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .works-title span { margin-left: 4px; }
+
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 48px 16px;
+  }
+  @media (min-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 64px 24px; } }
+  @media (min-width: 1200px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .thumb {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #111;
+  }
+  .thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.8s var(--ease);
+  }
+  @media (hover: hover) {
+    .card:hover .thumb :global(img) { transform: scale(1.03); }
+  }
+  .meta { margin-top: 14px; }
+  .meta h3 { font-size: 16px; letter-spacing: -0.01em; }
+  .meta p { margin-top: 2px; font-size: 13px; color: var(--muted); }
+</style>
