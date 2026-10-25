@@ -18,7 +18,14 @@ export async function getStaticPaths() {
 }
 
 const { work, next, order } = Astro.props;
-const { title, category, year, cover, images, description } = work.data;
+const { title, category, year, cover, images, description, period, contribution, tools, model } = work.data;
+// 대표 이미지 아래 정보: 비어 있는 줄은 빼요
+const facts = [
+  ['Period', period],
+  ['Contribution', contribution],
+  ['Tools', tools],
+  ['Model', model],
+].filter(([, v]) => v && v.trim());
 // PC에서도 태블릿 정도 폭(820px)으로만 보여요
 const sizes = '(min-width: 900px) 820px, 100vw';
 ---
@@ -31,10 +38,24 @@ const sizes = '(min-width: 900px) 820px, 100vw';
       <p class="info line" style="--i:1">{categoryOf(category).label} · {year}</p>
     </header>
 
-    <!-- 순서: 제목 → 대표 이미지 → 설명 → 상세 이미지 -->
+    <!-- 순서: 제목 → 대표 이미지 → 작업 정보 → 설명 → 상세 이미지 -->
     <Image class="cover line" style="--i:2" src={cover} alt={title} widths={[640, 1080, 1600, 2000]} sizes={sizes} loading="eager" format="webp" quality={82} />
 
-    {description && <p class="desc reveal">{description}</p>}
+    {(facts.length > 0 || description) && (
+      <div class="about">
+        {facts.length > 0 && (
+          <dl class="facts reveal">
+            {facts.map(([k, v]) => (
+              <div>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {description && <p class="desc reveal">{description}</p>}
+      </div>
+    )}
 
     <div class="images">
       {images.map((img, i) => (
@@ -100,7 +121,13 @@ const sizes = '(min-width: 900px) 820px, 100vw';
     letter-spacing: -0.03em;
   }
   .info { margin-top: 10px; font-size: 14px; color: var(--muted); }
-  .desc { margin: 32px 0 56px; font-size: 16px; line-height: 1.75; color: rgba(255, 255, 255, 0.85); white-space: pre-line; }
+  .about { margin: 32px 0 56px; }
+  .facts { margin: 0; display: grid; gap: 6px; font-size: 15px; line-height: 1.6; }
+  .facts div { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
+  .facts dt { font-weight: 700; }
+  .facts dd { margin: 0; font-weight: 400; color: rgba(255, 255, 255, 0.85); }
+  .desc { font-size: 16px; line-height: 1.75; color: rgba(255, 255, 255, 0.85); white-space: pre-line; }
+  .facts + .desc { margin-top: 28px; }
 
   .images { display: grid; gap: 12px; }
   .cover, .images :global(img) {

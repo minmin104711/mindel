@@ -39,6 +39,22 @@ content:
         description: 목록에 보이는 사진이에요. 정사각형(1:1)으로 보여요. 1600×1600px 추천.
         type: image
         required: true
+      - name: period
+        label: 작업기간
+        description: "예: 2026.03 – 2026.05 (비우면 사이트에 안 보여요)"
+        type: string
+      - name: contribution
+        label: 기여도
+        description: "예: 100% / 디자인 70% (비우면 사이트에 안 보여요)"
+        type: string
+      - name: tools
+        label: 사용툴
+        description: "예: Figma, Photoshop (비우면 사이트에 안 보여요)"
+        type: string
+      - name: model
+        label: 모델 (사진 작업일 때, 선택)
+        description: "예: Mirae (비우면 사이트에 안 보여요)"
+        type: string
       - name: images
         label: 상세 이미지
         description: 여러 장 올릴 수 있어요. 순서대로 보여요.

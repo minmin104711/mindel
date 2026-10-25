@@ -12,6 +12,11 @@ const works = defineCollection({
       cover: image(),
       images: z.array(image()).nullish().transform((v) => v ?? []),
       description: z.string().nullish().transform((v) => v ?? ''),
+      // 대표 이미지 아래 정보 (비워도 돼요)
+      period: z.coerce.string().nullish().transform((v) => v ?? ''),
+      contribution: z.coerce.string().nullish().transform((v) => v ?? ''),
+      tools: z.coerce.string().nullish().transform((v) => v ?? ''),
+      model: z.coerce.string().nullish().transform((v) => v ?? ''),
     }),
 });
 
