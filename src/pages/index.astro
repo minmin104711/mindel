@@ -4,12 +4,14 @@ import Base from '../layouts/Base.astro';
 import HeroLines from '../components/HeroLines.astro';
 import site from '../data/site.json';
 import { getWorks } from '../lib';
+import { CATEGORIES, categoryOf } from '../categories';
 
 const works = await getWorks();
-// 작업물이 있는 종류만 버튼으로 보여요
-const categories = (['그래픽', '사진', '패키지'] as const)
-  .map((name) => ({ name, count: works.filter((w) => w.data.category === name).length }))
-  .filter((c) => c.count > 0);
+// 종류별 버튼 (메뉴와 같은 순서)
+const categories = CATEGORIES.map((c) => ({
+  ...c,
+  count: works.filter((w) => w.data.category === c.ko).length,
+}));
 // 소개 문장에서 줄바꿈(엔터)마다 한 줄씩 나타나요
 const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
 ---
@@ -29,21 +31,19 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
 
   <section class="works wrap" aria-labelledby="works-title">
     <h2 id="works-title" class="works-title">Works</h2>
-    {categories.length > 1 && (
-      <div class="filters" role="group" aria-label="종류별로 보기">
-        <button type="button" class="filter" data-filter="all" aria-pressed="true">
-          전체<sup>{works.length}</sup>
+    <div class="filters" role="group" aria-label="Filter works">
+      <button type="button" class="filter" data-filter="all" aria-pressed="true">
+        All<sup>{works.length}</sup>
+      </button>
+      {categories.map((c) => (
+        <button type="button" class="filter" data-filter={c.key} aria-pressed="false">
+          {c.label}<sup>{c.count}</sup>
         </button>
-        {categories.map((c) => (
-          <button type="button" class="filter" data-filter={c.name} aria-pressed="false">
-            {c.name}<sup>{c.count}</sup>
-          </button>
-        ))}
-      </div>
-    )}
+      ))}
+    </div>
     <ul class="grid">
       {works.map((work, i) => (
-        <li class="reveal" data-category={work.data.category}>
+        <li class="reveal" data-category={categoryOf(work.data.category).key}>
           <a href={`/works/${work.id}/`} class="card">
             <div class="thumb">
               <Image
@@ -58,25 +58,29 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
             </div>
             <div class="meta">
               <h3>{work.data.title}</h3>
-              <p>{work.data.category} · {work.data.year}</p>
+              <p>{categoryOf(work.data.category).label} · {work.data.year}</p>
             </div>
           </a>
         </li>
       ))}
     </ul>
+    <p class="empty" hidden>Coming soon.</p>
   </section>
 </Base>
 
 <script>
   const buttons = document.querySelectorAll<HTMLButtonElement>('.filter');
   const items = document.querySelectorAll<HTMLElement>('.grid > li');
+  const empty = document.querySelector<HTMLElement>('.empty')!;
   const KEY = 'mindel-filter';
 
   function apply(filter: string, animate: boolean) {
     if (![...buttons].some((b) => b.dataset.filter === filter)) filter = 'all';
     buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    let visible = 0;
     items.forEach((li) => {
       const show = filter === 'all' || li.dataset.category === filter;
+      if (show) visible++;
       li.hidden = !show;
       if (show && animate) {
         // 보이는 작업물만 살짝 올라오며 다시 나타나요
@@ -85,15 +89,24 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
         li.classList.add('is-visible', 'pop');
       }
     });
+    empty.hidden = visible > 0;
     try { sessionStorage.setItem(KEY, filter); } catch {}
   }
 
   buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter!, true)));
 
-  // 상세 페이지에서 돌아왔을 때 고른 종류를 그대로 유지해요
+  // 메뉴에서 이 화면에 있을 때 종류를 누르면 바로 바꿔요
+  window.addEventListener('mindel:filter', (e) => apply((e as CustomEvent<string>).detail, true));
+
+  // 메뉴에서 다른 페이지에 있다가 종류를 누르면 /?type=graphic 처럼 들어와요.
+  // 아니면 상세 페이지에서 돌아왔을 때 고른 종류를 그대로 유지해요.
+  const params = new URLSearchParams(location.search);
   let saved = 'all';
   try { saved = sessionStorage.getItem(KEY) || 'all'; } catch {}
-  if (saved !== 'all') apply(saved, false);
+  const initial = params.get('type') || saved;
+  if (initial !== 'all') apply(initial, false);
+  else if (params.has('type')) apply('all', false);
+  if (params.has('type')) history.replaceState(null, '', '/' + location.hash);
 </script>
 
 <style>
@@ -162,6 +175,7 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
   }
 
   .grid > li[hidden] { display: none; }
+  .empty { padding: 24px 0 8px; font-size: 14px; color: var(--muted); }
   .grid > li.pop { animation: pop-in 0.6s var(--ease); }
   @keyframes pop-in {
     from { opacity: 0; transform: translate3d(0, 16px, 0); }

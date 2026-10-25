@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import { getWorks } from '../../lib';
+import { categoryOf } from '../../categories';
 
 export async function getStaticPaths() {
   const works = await getWorks();
@@ -11,7 +12,7 @@ export async function getStaticPaths() {
       work,
       next: works[(i + 1) % works.length],
       // 목록에서 고른 종류 안에서 "다음"을 고를 수 있게 전체 순서를 넘겨요
-      order: works.map((w) => ({ id: w.id, title: w.data.title, category: w.data.category })),
+      order: works.map((w) => ({ id: w.id, title: w.data.title, category: categoryOf(w.data.category).key })),
     },
   }));
 }
@@ -26,7 +27,7 @@ const sizes = '(min-width: 1440px) 1360px, 100vw';
     <header class="head">
       <a href="/#works-title" class="back">← Works</a>
       <h1 class="line" style="--i:0">{title}</h1>
-      <p class="info line" style="--i:1">{category} · {year}</p>
+      <p class="info line" style="--i:1">{categoryOf(category).label} · {year}</p>
       {description && <p class="desc line" style="--i:2">{description}</p>}
     </header>
 
@@ -47,6 +48,7 @@ const sizes = '(min-width: 1440px) 1360px, 100vw';
 </Base>
 
 <script>
+  import { CATEGORIES } from '../../categories';
   // 목록에서 종류(그래픽/사진/패키지)를 골라 두었으면, 그 종류 안에서 다음 작업물로 넘어가요
   const link = document.querySelector<HTMLAnchorElement>('.next');
   let filter = 'all';
@@ -54,21 +56,22 @@ const sizes = '(min-width: 1440px) 1360px, 100vw';
 
   if (link && filter !== 'all') {
     const order: { id: string; title: string; category: string }[] = JSON.parse(link.dataset.order!);
+    const label = CATEGORIES.find((c) => c.key === filter)?.label ?? filter;
     const list = order.filter((w) => w.category === filter);
     const i = list.findIndex((w) => w.id === link.dataset.current);
 
     if (i !== -1) {
-      const label = link.querySelector('span')!;
+      const labelEl = link.querySelector('span')!;
       const title = link.querySelector('strong')!;
       if (list.length > 1) {
         const next = list[(i + 1) % list.length];
         link.href = `/works/${next.id}/`;
-        label.textContent = `Next · ${filter}`;
+        labelEl.textContent = `Next · ${label}`;
         title.textContent = next.title;
       } else {
         // 이 종류에 작업물이 하나뿐이면 목록으로
         link.href = '/#works-title';
-        label.textContent = filter;
+        labelEl.textContent = label;
         title.textContent = '← Back';
       }
     }

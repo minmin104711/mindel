@@ -2,6 +2,7 @@
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import '../styles/global.css';
 import site from '../data/site.json';
+import Menu from '../components/Menu.astro';
 
 interface Props {
   title?: string;
@@ -41,7 +42,7 @@ const pageTitle = title ? `${title} — MINDEL` : 'MINDEL';
   <body>
     <header class="header wrap">
       <a href="/" class="logo">MINDEL</a>
-      <a href="#contact" class="nav">Contact</a>
+      <Menu />
     </header>
 
     <main>
@@ -91,8 +92,6 @@ const pageTitle = title ? `${title} — MINDEL` : 'MINDEL';
     font-size: 14px;
   }
   .logo { font-weight: 600; letter-spacing: 0.08em; }
-  .nav { color: var(--muted); transition: color 0.2s; }
-  .nav:hover { color: var(--fg); }
 
   .footer {
     margin-top: 120px;

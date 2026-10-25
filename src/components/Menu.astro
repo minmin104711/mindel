@@ -1,0 +1,242 @@
+---
+// 오른쪽 위 메뉴 버튼(☰)과 오른쪽에서 나오는 메뉴
+import { CATEGORIES } from '../categories';
+
+const types = [{ key: 'all', label: 'All' }, ...CATEGORIES];
+---
+
+<button type="button" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="menu">
+  <span></span><span></span><span></span>
+</button>
+
+<div class="menu-backdrop" data-menu-close></div>
+
+<nav id="menu" class="menu" aria-label="Menu">
+  <button type="button" class="menu-close" aria-label="Close menu" data-menu-close>
+    <span></span><span></span>
+  </button>
+
+  <ul class="menu-list">
+    <li style="--i:0">
+      <button type="button" class="menu-item works-toggle" aria-expanded="false" aria-controls="menu-works">
+        Works<i aria-hidden="true"></i>
+      </button>
+      <div id="menu-works" class="sub">
+        <ul>
+          {types.map((t) => (
+            <li><a href={`/?type=${t.key}#works-title`} data-type={t.key}>{t.label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </li>
+    <li style="--i:1">
+      <a href="/#contact" class="menu-item" data-contact>Contact</a>
+    </li>
+  </ul>
+</nav>
+
+<script>
+  const root = document.documentElement;
+  const btn = document.querySelector<HTMLButtonElement>('.menu-btn')!;
+  const menu = document.querySelector<HTMLElement>('#menu')!;
+  const closeBtn = menu.querySelector<HTMLButtonElement>('.menu-close')!;
+  const toggle = menu.querySelector<HTMLButtonElement>('.works-toggle')!;
+  const onHome = location.pathname === '/';
+
+  function open() {
+    root.classList.add('menu-open');
+    btn.setAttribute('aria-expanded', 'true');
+    // 지금 고른 종류를 표시
+    let current = 'all';
+    try { current = sessionStorage.getItem('mindel-filter') || 'all'; } catch {}
+    menu.querySelectorAll<HTMLAnchorElement>('[data-type]').forEach((a) => {
+      if (onHome && a.dataset.type === current) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+    setTimeout(() => closeBtn.focus(), 50);
+  }
+
+  function close() {
+    root.classList.remove('menu-open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  btn.addEventListener('click', open);
+  document.querySelectorAll('[data-menu-close]').forEach((el) => el.addEventListener('click', () => { close(); btn.focus(); }));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && root.classList.contains('menu-open')) { close(); btn.focus(); } });
+
+  // Works를 누르면 종류 목록이 펼쳐져요
+  toggle.addEventListener('click', () => {
+    toggle.setAttribute('aria-expanded', String(toggle.getAttribute('aria-expanded') !== 'true'));
+  });
+
+  // 메인 화면에 있을 때는 페이지를 다시 열지 않고 바로 이동해요
+  menu.querySelectorAll<HTMLAnchorElement>('[data-type]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      if (!onHome) return;
+      e.preventDefault();
+      close();
+      window.dispatchEvent(new CustomEvent('mindel:filter', { detail: a.dataset.type }));
+      document.querySelector('#works-title')?.scrollIntoView({ behavior: 'smooth' });
+    })
+  );
+  menu.querySelector<HTMLAnchorElement>('[data-contact]')!.addEventListener('click', (e) => {
+    if (!onHome) return;
+    e.preventDefault();
+    close();
+    document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
+  });
+</script>
+
+<style>
+  /* ☰ 버튼 */
+  .menu-btn,
+  .menu-close {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    margin-right: -9px;
+    display: grid;
+    place-content: center;
+    gap: 6px;
+    color: var(--fg);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .menu-btn span,
+  .menu-close span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: currentColor;
+  }
+
+  /* 뒤 배경 어둡게 */
+  .menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease);
+  }
+
+  /* 오른쪽에서 나오는 메뉴 */
+  .menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: min(86vw, 380px);
+    overflow-y: auto;
+    background: #000;
+    border-left: 1px solid var(--line);
+    padding: calc(env(safe-area-inset-top) + 96px) var(--gutter) 40px 32px;
+    transform: translate3d(100%, 0, 0);
+    visibility: hidden;
+    transition: transform 0.5s var(--ease), visibility 0s linear 0.5s;
+  }
+  .menu-close {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 10px);
+    right: var(--gutter);
+    gap: 0;
+  }
+  .menu-close span { grid-area: 1 / 1; }
+  .menu-close span:first-child { transform: rotate(45deg); }
+  .menu-close span:last-child { transform: rotate(-45deg); }
+
+  :global(html.menu-open) { overflow: hidden; }
+  :global(html.menu-open) .menu-backdrop { opacity: 1; pointer-events: auto; }
+  :global(html.menu-open) .menu {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.5s var(--ease);
+  }
+
+  .menu-list { list-style: none; margin: 0; padding: 0; }
+  .menu-list > li {
+    opacity: 0;
+    transform: translate3d(16px, 0, 0);
+    transition: opacity 0.4s var(--ease), transform 0.5s var(--ease);
+  }
+  :global(html.menu-open) .menu-list > li {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(0.12s + var(--i) * 0.06s);
+  }
+
+  .menu-item {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 8px 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font: inherit;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    color: var(--fg);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  /* Works 옆 + / − 표시 */
+  .menu-item i {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+  }
+  .menu-item i::before,
+  .menu-item i::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1.5px;
+    background: var(--muted);
+    transition: transform 0.4s var(--ease);
+  }
+  .menu-item i::after { transform: rotate(90deg); }
+  .works-toggle[aria-expanded='true'] i::after { transform: rotate(0deg); }
+
+  /* 종류 목록: 부드럽게 펼쳐져요 */
+  .sub {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.45s var(--ease);
+  }
+  .works-toggle[aria-expanded='true'] + .sub { grid-template-rows: 1fr; }
+  .sub ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  .sub li:first-child { margin-top: 6px; }
+  .sub li:last-child { margin-bottom: 18px; }
+  .sub a {
+    display: block;
+    padding: 7px 0;
+    font-size: 18px;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .sub a:hover,
+  .sub a[aria-current] { color: var(--fg); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu, .menu-backdrop, .menu-list > li, .sub { transition: none !important; }
+  }
+</style>

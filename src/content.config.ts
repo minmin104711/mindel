@@ -1,12 +1,13 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { CATEGORIES } from './categories';
 
 const works = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/works' }),
   schema: ({ image }) =>
     z.object({
       title: z.string(),
-      category: z.enum(['그래픽', '사진', '패키지']),
+      category: z.enum(CATEGORIES.map((c) => c.ko) as [string, ...string[]]),
       year: z.coerce.number(),
       cover: image(),
       images: z.array(image()).nullish().transform((v) => v ?? []),
