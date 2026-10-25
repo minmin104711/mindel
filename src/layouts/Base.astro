@@ -25,11 +25,15 @@ const pageTitle = title ? `${title} — MINDEL` : 'MINDEL';
     <title>{pageTitle}</title>
     <script is:inline>
       document.documentElement.classList.add('js');
-      // 메인 배경 선 애니메이션은 처음 방문했을 때 한 번만
+      // 메인 배경 선 애니메이션: 사이트를 새로 열거나 새로고침할 때마다 (같은 창에서 돌아올 때는 X)
       try {
-        if (location.pathname === '/' && !localStorage.getItem('mindel-drawn')) {
-          document.documentElement.classList.add('draw');
-          localStorage.setItem('mindel-drawn', '1');
+        var nav = performance.getEntriesByType('navigation')[0];
+        var reload = nav && nav.type === 'reload';
+        if (location.pathname === '/') {
+          if (reload || !sessionStorage.getItem('mindel-drawn')) {
+            document.documentElement.classList.add('draw');
+          }
+          sessionStorage.setItem('mindel-drawn', '1');
         }
       } catch (e) {}
     </script>
