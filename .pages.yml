@@ -34,7 +34,7 @@ content:
         required: true
       - name: cover
         label: 대표 이미지
-        description: 목록에 보이는 사진이에요. 세로 4:5 비율이 가장 예쁘게 보여요.
+        description: 목록에 보이는 사진이에요. 정사각형(1:1)으로 보여요. 1600×1600px 추천.
         type: image
         required: true
       - name: images
