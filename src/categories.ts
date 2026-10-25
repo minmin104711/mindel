@@ -1,11 +1,11 @@
 // 작업물 종류: Pages CMS에서 고르는 이름(ko)과 사이트에 보이는 영어 이름(label)
 export const CATEGORIES = [
-  { key: 'graphic', ko: '그래픽', label: 'Graphic' },
+  { key: 'branding', ko: '브랜딩', label: 'Branding' },
   { key: 'photo', ko: '사진', label: 'Photo' },
   { key: 'package', ko: '패키지', label: 'Package' },
+  { key: 'graphic', ko: '그래픽', label: 'Graphic' },
   { key: 'logo', ko: '로고', label: 'Logo' },
   { key: 'character', ko: '캐릭터', label: 'Character' },
-  { key: 'branding', ko: '브랜딩', label: 'Branding' },
 ] as const;
 
 export type CategoryKo = (typeof CATEGORIES)[number]['ko'];
