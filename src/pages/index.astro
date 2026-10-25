@@ -76,7 +76,14 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
 
   function apply(filter: string, animate: boolean) {
     if (![...buttons].some((b) => b.dataset.filter === filter)) filter = 'all';
-    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    buttons.forEach((b) => {
+      const on = b.dataset.filter === filter;
+      b.setAttribute('aria-pressed', String(on));
+      // 고른 버튼이 화면 밖에 있으면 보이도록 옆으로 밀어줘요 (휴대폰)
+      if (on && b.parentElement!.scrollWidth > b.parentElement!.clientWidth) {
+        b.parentElement!.scrollTo({ left: b.offsetLeft - b.parentElement!.offsetLeft - 20, behavior: animate ? 'smooth' : 'auto' });
+      }
+    });
     let visible = 0;
     items.forEach((li) => {
       const show = filter === 'all' || li.dataset.category === filter;
@@ -148,6 +155,26 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
     flex-wrap: wrap;
     gap: 4px 20px;
     margin: -8px 0 32px;
+  }
+  /* 휴대폰: 한 줄로 두고 옆으로 밀어서 보기 */
+  @media (max-width: 767px) {
+    .filters {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      /* 화면 끝까지 밀리도록 양옆 여백만큼 넓히기 */
+      margin-left: calc(var(--gutter) * -1);
+      margin-right: calc(var(--gutter) * -1);
+      padding: 0 var(--gutter);
+      scroll-padding: 0 var(--gutter);
+      /* 오른쪽 끝을 살짝 흐리게: 옆에 더 있다는 표시 */
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter { flex: none; white-space: nowrap; }
+    .filter:last-child { margin-right: 24px; }
   }
   .filter {
     appearance: none;
