@@ -19,11 +19,12 @@ export async function getStaticPaths() {
 
 const { work, next, order } = Astro.props;
 const { title, category, year, cover, images, description } = work.data;
-const sizes = '(min-width: 1440px) 1360px, 100vw';
+// PC에서도 태블릿 정도 폭(820px)으로만 보여요
+const sizes = '(min-width: 900px) 820px, 100vw';
 ---
 
 <Base title={title} description={description || title}>
-  <article class="wrap">
+  <article class="wrap detail">
     <header class="head">
       <a href="/#works-title" class="back">← Works</a>
       <h1 class="line" style="--i:0">{title}</h1>
@@ -79,7 +80,9 @@ const sizes = '(min-width: 1440px) 1360px, 100vw';
 </script>
 
 <style>
-  .head { padding: 40px 0 48px; max-width: 720px; }
+  /* PC에서는 가운데 820px만 쓰고 양옆은 여백 */
+  .detail { max-width: calc(820px + var(--gutter) * 2); }
+  .head { padding: 40px 0 48px; }
   .back {
     display: inline-block;
     font-size: 13px;
