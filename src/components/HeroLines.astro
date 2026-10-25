@@ -1,14 +1,8 @@
 ---
 // 메인 배경 라인 그림.
 // 그림을 바꾸려면 src/assets/hero-lines.svg 파일만 교체하면 돼요 (선은 "획(Stroke)"이어야 해요).
-// 사이트를 만들 때 선마다 길이와 위치를 계산해서,
-// 중심(CENTER)에 가까운 선부터 바깥쪽으로 차례로 그려지게 해요.
-import { svgPathProperties } from 'svg-path-properties';
+// 애니메이션: 중심(아래 CSS의 --cx, --cy)에서 먹이 번지듯 둥글게 퍼지며 선이 드러나요.
 import raw from '../assets/hero-lines.svg?raw';
-
-// 퍼져나가기 시작하는 점 (원본 그림 좌표, 민들레 중심)
-const CENTER = { x: 1260, y: 545 };
-const SPREAD = 2.4; // 가장 바깥 선이 시작하기까지 걸리는 시간(초)
 
 const viewBox = raw.match(/viewBox="([^"]+)"/)?.[1] ?? '0 0 1920 1080';
 
@@ -24,34 +18,24 @@ const compact = (d: string) =>
     .replace(/ ?([a-zA-Z-]) ?/g, (_, c) => (c === '-' ? '-' : c))
     .trim();
 
-const dist = (p: { x: number; y: number }) => Math.hypot(p.x - CENTER.x, p.y - CENTER.y);
-
-const items = [...raw.matchAll(/<path[^>]*\sd="([^"]+)"/g)].map((m) => {
-  const d = m[1];
-  const props = new svgPathProperties(d);
-  const len = props.getTotalLength();
-  const ds = dist(props.getPointAtLength(0));
-  const de = dist(props.getPointAtLength(len));
-  return { d: compact(d), len, near: Math.min(ds, de), reverse: de < ds };
-});
-
-const maxNear = Math.max(...items.map((i) => i.near), 1);
-
-const paths = items
-  .sort((a, b) => a.near - b.near)
-  .map((i) => {
-    const delay = (i.near / maxNear) ** 0.85 * SPREAD;
-    const dur = 0.5 + Math.min(i.len / 500, 1) * 0.9;
-    return `<path d="${i.d}" pathLength="1"${i.reverse ? ' class="r"' : ''} style="--t:${delay.toFixed(2)}s;--u:${dur.toFixed(2)}s"/>`;
-  })
+const paths = [...raw.matchAll(/<path[^>]*\sd="([^"]+)"/g)]
+  .map((m) => `<path d="${compact(m[1])}"/>`)
   .join('');
 ---
 
 <div class="art" aria-hidden="true">
-  <svg viewBox={viewBox} fill="none" preserveAspectRatio="xMidYMid meet" set:html={paths} />
+  <div class="ink">
+    <svg viewBox={viewBox} fill="none" preserveAspectRatio="xMidYMid meet" set:html={paths} />
+  </div>
 </div>
 
 <style>
+  @property --ink {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 120%;
+  }
+
   .art {
     position: absolute;
     inset: 0;
@@ -61,50 +45,62 @@ const paths = items
     -webkit-mask-image: linear-gradient(#000 70%, transparent);
     mask-image: linear-gradient(#000 70%, transparent);
   }
-  svg {
+
+  .ink {
+    /* 퍼져나가는 중심: 민들레 중심 (원본 그림의 1260, 545 지점) */
+    --cx: 65.6%;
+    --cy: 50.5%;
     position: absolute;
     top: 50%;
     /* 휴대폰: 민들레 중심이 화면 가운데 오도록 크게 */
     left: 50%;
     height: 72%;
-    width: auto;
     aspect-ratio: 16 / 9;
     transform: translate(-65.6%, -58%);
+    will-change: transform;
+    -webkit-mask-image:
+      linear-gradient(#000 60%, transparent),
+      radial-gradient(circle farthest-corner at var(--cx) var(--cy), #000 calc(var(--ink) - 14%), transparent var(--ink));
+    mask-image:
+      linear-gradient(#000 60%, transparent),
+      radial-gradient(circle farthest-corner at var(--cx) var(--cy), #000 calc(var(--ink) - 14%), transparent var(--ink));
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
     stroke: #fff;
     stroke-opacity: 0.42;
     stroke-width: 2.2; /* 원본 그림 기준 두께 (휴대폰 화면에서 약 1px) */
     stroke-linecap: round;
     stroke-linejoin: round;
-    /* 그림 자체의 아래쪽 끝도 부드럽게 */
-    -webkit-mask-image: linear-gradient(#000 60%, transparent);
-    mask-image: linear-gradient(#000 60%, transparent);
+    will-change: transform;
   }
 
   @media (min-width: 768px) {
-    svg {
+    .ink {
       left: 0;
       width: 100%;
       height: auto;
       max-height: 100%;
       transform: translateY(-50%);
-      stroke-width: 1.4;
     }
+    svg { stroke-width: 1.4; }
   }
 
-  /* 처음 방문할 때만: 선이 중심에서 바깥으로 그려져요 */
-  :global(html.draw) svg :global(path) {
-    stroke-dasharray: 1 1;
-    stroke-dashoffset: 1;
-    animation: draw var(--u) cubic-bezier(0.45, 0, 0.25, 1) var(--t) forwards;
+  /* 새로 열거나 새로고침할 때: 중심에서 먹이 번지듯 퍼져요 */
+  :global(html.draw) .ink {
+    animation: ink 4.2s cubic-bezier(0.3, 0.3, 0.2, 1) 0.15s both;
   }
-  :global(html.draw) svg :global(path.r) {
-    stroke-dashoffset: -1;
-  }
-  @keyframes draw {
-    to { stroke-dashoffset: 0; }
+  @keyframes ink {
+    from { --ink: 0%; }
+    to { --ink: 120%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :global(html.draw) svg :global(path) { animation: none; stroke-dashoffset: 0; }
+    :global(html.draw) .ink { animation: none; }
   }
 </style>
