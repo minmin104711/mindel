@@ -5,6 +5,7 @@ export const CATEGORIES = [
   { key: 'package', ko: '패키지', label: 'Package' },
   { key: 'logo', ko: '로고', label: 'Logo' },
   { key: 'character', ko: '캐릭터', label: 'Character' },
+  { key: 'branding', ko: '브랜딩', label: 'Branding' },
 ] as const;
 
 export type CategoryKo = (typeof CATEGORIES)[number]['ko'];

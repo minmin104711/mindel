@@ -29,7 +29,7 @@ content:
         type: select
         required: true
         options:
-          values: [그래픽, 사진, 패키지, 로고, 캐릭터]
+          values: [그래픽, 사진, 패키지, 로고, 캐릭터, 브랜딩]
       - name: year
         label: 연도
         type: number
