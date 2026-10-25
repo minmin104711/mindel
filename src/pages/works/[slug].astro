@@ -29,11 +29,14 @@ const sizes = '(min-width: 900px) 820px, 100vw';
       <a href="/#works-title" class="back">← Works</a>
       <h1 class="line" style="--i:0">{title}</h1>
       <p class="info line" style="--i:1">{categoryOf(category).label} · {year}</p>
-      {description && <p class="desc line" style="--i:2">{description}</p>}
     </header>
 
+    <!-- 순서: 제목 → 대표 이미지 → 설명 → 상세 이미지 -->
+    <Image class="cover line" style="--i:2" src={cover} alt={title} widths={[640, 1080, 1600, 2000]} sizes={sizes} loading="eager" format="webp" quality={82} />
+
+    {description && <p class="desc reveal">{description}</p>}
+
     <div class="images">
-      <Image src={cover} alt={title} widths={[640, 1080, 1600, 2000]} sizes={sizes} loading="eager" format="webp" quality={82} />
       {images.map((img, i) => (
         <Image class="reveal" src={img} alt={`${title} 상세 이미지 ${i + 1}`} widths={[640, 1080, 1600, 2000]} sizes={sizes} format="webp" quality={82} />
       ))}
@@ -82,7 +85,7 @@ const sizes = '(min-width: 900px) 820px, 100vw';
 <style>
   /* PC에서는 가운데 820px만 쓰고 양옆은 여백 */
   .detail { max-width: calc(820px + var(--gutter) * 2); }
-  .head { padding: 40px 0 48px; }
+  .head { padding: 40px 0 32px; }
   .back {
     display: inline-block;
     font-size: 13px;
@@ -97,11 +100,16 @@ const sizes = '(min-width: 900px) 820px, 100vw';
     letter-spacing: -0.03em;
   }
   .info { margin-top: 10px; font-size: 14px; color: var(--muted); }
-  .desc { margin-top: 28px; font-size: 16px; line-height: 1.75; color: rgba(255, 255, 255, 0.85); white-space: pre-line; }
+  .desc { margin: 32px 0 56px; font-size: 16px; line-height: 1.75; color: rgba(255, 255, 255, 0.85); white-space: pre-line; }
 
   .images { display: grid; gap: 12px; }
-  @media (min-width: 768px) { .images { gap: 24px; } }
-  .images :global(img) { width: 100%; background: #111; }
+  .cover, .images :global(img) { width: 100%; background: #111; }
+  /* 설명이 없으면 대표 이미지와 상세 이미지 사이는 이미지 간격만큼 */
+  .cover + .images { margin-top: 12px; }
+  @media (min-width: 768px) {
+    .images { gap: 24px; }
+    .cover + .images { margin-top: 24px; }
+  }
 
   .next {
     display: block;
