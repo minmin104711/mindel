@@ -103,7 +103,12 @@ const sizes = '(min-width: 900px) 820px, 100vw';
   .desc { margin: 32px 0 56px; font-size: 16px; line-height: 1.75; color: rgba(255, 255, 255, 0.85); white-space: pre-line; }
 
   .images { display: grid; gap: 12px; }
-  .cover, .images :global(img) { width: 100%; background: #111; }
+  .cover, .images :global(img) {
+    width: 100%;
+    background: #111;
+    /* 피그마 내보내기 등으로 가장자리에 생기는 얇은 밝은 줄을 가려요 (가장자리 2px) */
+    clip-path: inset(2px);
+  }
   /* 설명이 없으면 대표 이미지와 상세 이미지 사이는 이미지 간격만큼 */
   .cover + .images { margin-top: 12px; }
   @media (min-width: 768px) {

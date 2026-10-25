@@ -204,6 +204,7 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
     width: 100%;
     height: 100%;
     object-fit: cover;
+    clip-path: inset(1px); /* 가장자리 얇은 밝은 줄 가리기 */
     transition: transform 0.8s var(--ease);
   }
   @media (hover: hover) {
