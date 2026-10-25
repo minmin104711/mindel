@@ -5,6 +5,10 @@ import site from '../data/site.json';
 import { getWorks } from '../lib';
 
 const works = await getWorks();
+// 작업물이 있는 종류만 버튼으로 보여요
+const categories = (['그래픽', '사진', '패키지'] as const)
+  .map((name) => ({ name, count: works.filter((w) => w.data.category === name).length }))
+  .filter((c) => c.count > 0);
 // 소개 문장에서 줄바꿈(엔터)마다 한 줄씩 나타나요
 const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
 ---
@@ -20,10 +24,22 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
   </section>
 
   <section class="works wrap" aria-labelledby="works-title">
-    <h2 id="works-title" class="works-title">Works <span>{works.length}</span></h2>
+    <h2 id="works-title" class="works-title">Works</h2>
+    {categories.length > 1 && (
+      <div class="filters" role="group" aria-label="종류별로 보기">
+        <button type="button" class="filter" data-filter="all" aria-pressed="true">
+          전체<sup>{works.length}</sup>
+        </button>
+        {categories.map((c) => (
+          <button type="button" class="filter" data-filter={c.name} aria-pressed="false">
+            {c.name}<sup>{c.count}</sup>
+          </button>
+        ))}
+      </div>
+    )}
     <ul class="grid">
       {works.map((work, i) => (
-        <li class="reveal">
+        <li class="reveal" data-category={work.data.category}>
           <a href={`/works/${work.id}/`} class="card">
             <div class="thumb">
               <Image
@@ -46,6 +62,35 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
     </ul>
   </section>
 </Base>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter');
+  const items = document.querySelectorAll<HTMLElement>('.grid > li');
+  const KEY = 'mindel-filter';
+
+  function apply(filter: string, animate: boolean) {
+    if (![...buttons].some((b) => b.dataset.filter === filter)) filter = 'all';
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    items.forEach((li) => {
+      const show = filter === 'all' || li.dataset.category === filter;
+      li.hidden = !show;
+      if (show && animate) {
+        // 보이는 작업물만 살짝 올라오며 다시 나타나요
+        li.classList.remove('is-visible', 'pop');
+        void li.offsetWidth;
+        li.classList.add('is-visible', 'pop');
+      }
+    });
+    try { sessionStorage.setItem(KEY, filter); } catch {}
+  }
+
+  buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter!, true)));
+
+  // 상세 페이지에서 돌아왔을 때 고른 종류를 그대로 유지해요
+  let saved = 'all';
+  try { saved = sessionStorage.getItem(KEY) || 'all'; } catch {}
+  if (saved !== 'all') apply(saved, false);
+</script>
 
 <style>
   .intro {
@@ -74,7 +119,46 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
     color: var(--muted);
     margin-bottom: 24px;
   }
-  .works-title span { margin-left: 4px; }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin: -8px 0 32px;
+  }
+  .filter {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 8px 0;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.25s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .filter sup {
+    margin-left: 3px;
+    font-size: 11px;
+    font-weight: 400;
+    vertical-align: 0.6em;
+  }
+  .filter[aria-pressed='true'] { color: var(--fg); }
+  @media (hover: hover) {
+    .filter:hover { color: var(--fg); }
+  }
+
+  .grid > li[hidden] { display: none; }
+  .grid > li.pop { animation: pop-in 0.6s var(--ease); }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grid > li.pop { animation: none; }
+  }
 
   .grid {
     list-style: none;
