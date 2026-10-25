@@ -11,5 +11,8 @@
   "dependencies": {
     "astro": "^5.18.2",
     "pretendard": "^1.3.9"
+  },
+  "devDependencies": {
+    "svg-path-properties": "^2.2.0"
   }
 }

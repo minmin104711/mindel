@@ -23,7 +23,16 @@ const pageTitle = title ? `${title} — MINDEL` : 'MINDEL';
     <meta property="og:description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{pageTitle}</title>
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      // 메인 배경 선 애니메이션은 처음 방문했을 때 한 번만
+      try {
+        if (location.pathname === '/' && !localStorage.getItem('mindel-drawn')) {
+          document.documentElement.classList.add('draw');
+          localStorage.setItem('mindel-drawn', '1');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <header class="header wrap">
