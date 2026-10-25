@@ -7,11 +7,16 @@ export async function getStaticPaths() {
   const works = await getWorks();
   return works.map((work, i) => ({
     params: { slug: work.id },
-    props: { work, next: works[(i + 1) % works.length] },
+    props: {
+      work,
+      next: works[(i + 1) % works.length],
+      // 목록에서 고른 종류 안에서 "다음"을 고를 수 있게 전체 순서를 넘겨요
+      order: works.map((w) => ({ id: w.id, title: w.data.title, category: w.data.category })),
+    },
   }));
 }
 
-const { work, next } = Astro.props;
+const { work, next, order } = Astro.props;
 const { title, category, year, cover, images, description } = work.data;
 const sizes = '(min-width: 1440px) 1360px, 100vw';
 ---
@@ -33,13 +38,42 @@ const sizes = '(min-width: 1440px) 1360px, 100vw';
     </div>
 
     {next && next.id !== work.id && (
-      <a href={`/works/${next.id}/`} class="next">
+      <a href={`/works/${next.id}/`} class="next" data-current={work.id} data-order={JSON.stringify(order)}>
         <span>Next</span>
         <strong>{next.data.title}</strong>
       </a>
     )}
   </article>
 </Base>
+
+<script>
+  // 목록에서 종류(그래픽/사진/패키지)를 골라 두었으면, 그 종류 안에서 다음 작업물로 넘어가요
+  const link = document.querySelector<HTMLAnchorElement>('.next');
+  let filter = 'all';
+  try { filter = sessionStorage.getItem('mindel-filter') || 'all'; } catch {}
+
+  if (link && filter !== 'all') {
+    const order: { id: string; title: string; category: string }[] = JSON.parse(link.dataset.order!);
+    const list = order.filter((w) => w.category === filter);
+    const i = list.findIndex((w) => w.id === link.dataset.current);
+
+    if (i !== -1) {
+      const label = link.querySelector('span')!;
+      const title = link.querySelector('strong')!;
+      if (list.length > 1) {
+        const next = list[(i + 1) % list.length];
+        link.href = `/works/${next.id}/`;
+        label.textContent = `Next · ${filter}`;
+        title.textContent = next.title;
+      } else {
+        // 이 종류에 작업물이 하나뿐이면 목록으로
+        link.href = '/#works-title';
+        label.textContent = filter;
+        title.textContent = '← 목록으로';
+      }
+    }
+  }
+</script>
 
 <style>
   .head { padding: 40px 0 48px; max-width: 720px; }
