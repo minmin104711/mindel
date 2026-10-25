@@ -9,8 +9,8 @@ const works = defineCollection({
       category: z.enum(['그래픽', '사진', '패키지']),
       year: z.coerce.number(),
       cover: image(),
-      images: z.array(image()).default([]),
-      description: z.string().default(''),
+      images: z.array(image()).nullish().transform((v) => v ?? []),
+      description: z.string().nullish().transform((v) => v ?? ''),
     }),
 });
 
