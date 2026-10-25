@@ -30,7 +30,11 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
   </section>
 
   <section class="works wrap" aria-labelledby="works-title">
-    <h2 id="works-title" class="works-title">Works</h2>
+    <div class="works-head">
+      <h2 id="works-title" class="works-title">Works</h2>
+      <!-- 휴대폰에서만: 종류 버튼을 옆으로 밀 수 있다는 표시 -->
+      <button type="button" class="scroll-hint" aria-label="Scroll filters">Scroll →</button>
+    </div>
     <div class="filters" role="group" aria-label="Filter works">
       <button type="button" class="filter" data-filter="all" aria-pressed="true">
         All<sup>{works.length}</sup>
@@ -102,6 +106,13 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
 
   buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter!, true)));
 
+  // Scroll → 를 누르면 종류 버튼 줄을 오른쪽으로 밀어요 (끝이면 처음으로)
+  const bar = document.querySelector<HTMLElement>('.filters')!;
+  document.querySelector('.scroll-hint')?.addEventListener('click', () => {
+    const atEnd = bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4;
+    bar.scrollTo({ left: atEnd ? 0 : bar.scrollLeft + bar.clientWidth * 0.6, behavior: 'smooth' });
+  });
+
   // 메뉴에서 이 화면에 있을 때 종류를 누르면 바로 바꿔요
   window.addEventListener('mindel:filter', (e) => apply((e as CustomEvent<string>).detail, true));
 
@@ -143,11 +154,30 @@ const lines = site.intro.split('\n').map((l) => l.trim()).filter(Boolean);
   }
 
   .works { padding-top: 32px; border-top: 1px solid var(--line); }
-  .works-title {
+  .works-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 24px;
+  }
+  .works-title,
+  .scroll-hint {
     font-size: 13px;
     font-weight: 400;
     color: var(--muted);
-    margin-bottom: 24px;
+  }
+  .scroll-hint {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: inherit;
+    line-height: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (min-width: 768px) {
+    .scroll-hint { display: none; }
   }
 
   .filters {
