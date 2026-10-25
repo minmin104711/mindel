@@ -3,6 +3,8 @@ media:
   input: src/assets/works
   output: ../../assets/works
   extensions: [jpg, jpeg, png, webp, gif, avif]
+  # 올릴 때 파일 이름을 자동으로 바꿔요 (IMG_0001.JPG처럼 대문자 확장자, 한글/띄어쓰기 이름도 문제없게)
+  rename: random
 
 content:
   - name: works
